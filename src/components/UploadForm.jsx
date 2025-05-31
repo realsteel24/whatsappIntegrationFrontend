@@ -123,76 +123,81 @@ export default function UploadForm() {
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-10 p-4 space-y-4 bg-zinc-900 rounded-lg text-white shadow">
-      <h1 className="text-2xl font-bold">WhatsApp CSV Sender</h1>
+    <div className="max-w-3xl mx-auto mt-12 px-6">
+      <div className="bg-zinc-950 rounded-lg shadow-lg p-8 border border-zinc-800">
+        <h1 className="text-3xl font-bold text-white mb-6">📤 WhatsApp Bulk Messaging</h1>
 
-      <label className="block">
-        Template:
-        <select
-          value={template}
-          onChange={(e) => {
-            setTemplate(e.target.value);
-            console.log("Selected template:", e.target.value);
-          }}
-          className="w-full mt-1 p-2 rounded bg-zinc-800"
-        >
-          <option value="">-- Select a template --</option>
-          {templates.map((tpl) => (
-            <option key={tpl.name} value={tpl.name}>
-              {tpl.name} ({tpl.status})
-            </option>
-          ))}
-        </select>
-      </label>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-zinc-400 mb-1 font-medium">Select Template</label>
+            <select
+              value={template}
+              onChange={(e) => {
+                setTemplate(e.target.value);
+                console.log("Selected template:", e.target.value);
+              }}
+              className="w-full p-3 rounded bg-zinc-800 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="">-- Choose Template --</option>
+              {templates.map((tpl) => (
+                <option key={tpl.name} value={tpl.name}>
+                  {tpl.name} ({tpl.status})
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <label className="block">
-        Upload CSV (columns: phone, name):
-        <input
-          type="file"
-          accept=".csv"
-          onChange={handleCsvUpload}
-          className="mt-1 block text-white"
-        />
-      </label>
+          <div>
+            <label className="block text-zinc-400 mb-1 font-medium">Upload CSV (columns: phone, name)</label>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleCsvUpload}
+              className="w-full bg-zinc-800 text-white p-3 rounded border border-zinc-700 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-green-600 file:text-white hover:file:bg-green-700"
+            />
+          </div>
 
-      {csvData.length > 0 && (
-        <div className="text-sm text-green-400">
-          <p>✅ Loaded {csvData.length} rows</p>
-          <p>
-            Preview: {csvData[0]?.name} - {csvData[0]?.phone}
-          </p>
-        </div>
-      )}
+          {csvData.length > 0 && (
+            <div className="text-sm text-green-400 bg-zinc-900 p-3 rounded">
+              <p>✅ Loaded {csvData.length} rows</p>
+              <p className="mt-1">
+                Preview: <span className="text-white">{csvData[0]?.name} - {csvData[0]?.phone}</span>
+              </p>
+            </div>
+          )}
 
-      <button
-        onClick={handleSend}
-        disabled={sending || !csvData.length || !template}
-        className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 py-2 rounded"
-      >
-        {sending ? "Sending..." : "Send Messages"}
-      </button>
+          <button
+            onClick={handleSend}
+            disabled={sending || !csvData.length || !template}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white py-3 rounded font-semibold transition"
+          >
+            {sending ? "Sending..." : "Send Messages"}
+          </button>
 
-      {result && (
-        <div className="mt-4 text-sm bg-zinc-800 p-3 rounded">
-          {result.success ? (
-            <>
-              ✅ Sent: {result.sent} <br />❌ Failed: {result.failed}
-              {result.errors?.length > 0 && (
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-red-400">
-                    View Errors
-                  </summary>
-                  <pre className="text-xs mt-1 text-red-300">
-                    {JSON.stringify(result.errors, null, 2)}
-                  </pre>
-                </details>
+          {result && (
+            <div className="mt-6 text-sm bg-zinc-900 p-4 rounded border border-zinc-700 text-white">
+              {result.success ? (
+                <>
+                  ✅ Sent: <span className="text-green-400">{result.sent}</span> <br />
+                  ❌ Failed: <span className="text-red-400">{result.failed}</span>
+                  {result.errors?.length > 0 && (
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-red-400 underline">
+                        View Errors
+                      </summary>
+                      <pre className="text-xs mt-1 text-red-300 whitespace-pre-wrap">
+                        {JSON.stringify(result.errors, null, 2)}
+                      </pre>
+                    </details>
+                  )}
+                </>
+              ) : (
+                <span className="text-red-400">❌ Error: {result.error}</span>
               )}
-            </>
-          ) : (
-            <span className="text-red-400">❌ Error: {result.error}</span>
+            </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
