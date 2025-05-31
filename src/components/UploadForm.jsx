@@ -32,54 +32,84 @@ export default function UploadForm() {
     console.log("Sending with template:", template);
     setSending(true);
 
-    const payload = csvData.map((row) => {
-      const message = {
-        to: row.phone,
-        templateName: template,
-        languageCode: "en",
-      };
-
-      if (template) {
-        // Build components for each message
-        const components = [
-          // IMAGE HEADER
-          {
-            type: "header",
-            parameters: [
-              {
-                type: "image",
-                image: {
-                  link: row.link,
-                },
-              },
-            ],
-          },
-          {
-            type: "body",
-            parameters: [
-              {
-                type: "text",
-                text: row.name || "Customer",
-              },
-            ],
-          },
-          // No body parameters since template expects 0
-        ];
-
-        message.components = components;
-      } else {
-        // Plain text fallback
-        message.messageText = `Hello ${row.name || "Customer"}`;
-      }
-
-      return message;
-    });
-
     try {
+      const contactPayload = csvData.map((row) => ({
+        name: row.name?.trim(),
+        phone: row.phone?.trim(),
+      }));
+
+      // Step 1: Create campaign and get ID
+      const campaignRes = await fetch(`${BACKEND_URL}/api/campaigns`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: template,
+          contacts: contactPayload,
+        }),
+      });
+
+      const campaignData = await campaignRes.json();
+      const campaignId = campaignData.campaignId;
+      const contactMap = campaignData.contacts || [];
+      const phoneToContactId = Object.fromEntries(
+        contactMap.map((c) => [c.phone, c.id])
+      );
+
+      // Step 2: Upload contacts
+      await fetch(`${BACKEND_URL}/api/contacts/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(contactPayload),
+      });
+
+      // Step 3: Prepare messages
+      const messagePayload = csvData.map((row) => {
+        const phone = row.phone?.trim();
+        const contactId = phoneToContactId[phone];
+
+        const message = {
+          to: phone,
+          templateName: template,
+          languageCode: "en",
+          campaignId,
+          contactId,
+        };
+
+        if (template) {
+          message.components = [
+            {
+              type: "header",
+              parameters: [
+                {
+                  type: "image",
+                  image: {
+                    link: row.link,
+                  },
+                },
+              ],
+            },
+            {
+              type: "body",
+              parameters: [
+                {
+                  type: "text",
+                  text: row.name || "Customer",
+                },
+              ],
+            },
+          ];
+        } else {
+          message.messageText = `Hello ${row.name || "Customer"}`;
+        }
+
+        return message;
+      });
+
+      // Step 4: Send messages
       const res = await fetch(`${BACKEND_URL}/api/send-messages-bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: payload }),
+        body: JSON.stringify({ messages: messagePayload, campaignId }),
       });
 
       const data = await res.json();

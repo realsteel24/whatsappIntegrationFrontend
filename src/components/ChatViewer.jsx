@@ -34,15 +34,15 @@ export default function ChatViewer() {
       <ul className="space-y-3">
         {messages.map((msg, i) => (
           <li key={i} className="bg-white/10 p-3 rounded-md">
-            <div className="text-sm text-gray-400">{msg.from}</div>
-            <div className="text-lg">{msg.body}</div>
+            <div className="text-sm text-gray-400">{msg.contact_name || msg.phone}</div>
+            <div className="text-lg">{msg.content}</div>
             <div className="text-xs text-gray-500">
-              {new Date(+msg.timestamp * 1000).toLocaleString()}
+              {new Date(msg.received_at).toLocaleString()}
             </div>
             <button
               className="mt-2 text-blue-400 underline text-sm"
               onClick={() => {
-                setReplyTo(msg.from);
+                setReplyTo(msg.phone);
                 setReplyText("");
               }}
             >
