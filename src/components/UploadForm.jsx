@@ -76,8 +76,10 @@ export default function UploadForm() {
         };
 
         if (template) {
-          message.components = [
-            {
+          message.components = [];
+
+          if (row.link) {
+            message.components.push({
               type: "header",
               parameters: [
                 {
@@ -87,17 +89,21 @@ export default function UploadForm() {
                   },
                 },
               ],
-            },
-            {
+            });
+          }
+
+          // Only add body text if name exists and is needed
+          if (row.name?.trim()) {
+            message.components.push({
               type: "body",
               parameters: [
                 {
                   type: "text",
-                  text: row.name || "Customer",
+                  text: row.name.trim(),
                 },
               ],
-            },
-          ];
+            });
+          }
         } else {
           message.messageText = `Hello ${row.name || "Customer"}`;
         }
@@ -163,6 +169,25 @@ export default function UploadForm() {
               <p className="mt-1">
                 Preview: <span className="text-white">{csvData[0]?.name} - {csvData[0]?.phone}</span>
               </p>
+            </div>
+          )}
+
+          {/* Message Preview Section */}
+          {csvData.length > 0 && template && (
+            <div className="bg-zinc-900 text-sm text-white p-4 rounded border border-zinc-700 mb-4">
+              <p className="font-semibold text-green-400 mb-1">📄 Message Preview</p>
+              <pre className="whitespace-pre-wrap text-xs text-zinc-300">
+                {(() => {
+                  const first = csvData[0];
+                  const name = first?.name?.trim();
+                  const link = first?.link;
+                  if (!template) return null;
+
+                  const bodyText = name ? `Hello ${name}, ...` : `Hello, ...`;
+                  const mediaLine = link ? `[image: ${link}]` : "";
+                  return `${mediaLine}\n${bodyText}`;
+                })()}
+              </pre>
             </div>
           )}
 
